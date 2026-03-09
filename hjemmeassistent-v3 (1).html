@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Hjemmet">
+<title>Hjemmet</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F0E8;--sur:#fff;--warm:#EDE5D5;--bor:#DDD4C0;--stone:#B8A88A;--clay:#8B6E4E;--bark:#5C3D20;--ink:#251A0E;--sage:#4F7C54;--sage-bg:#E4F0E5;--rust:#B84A24;--rust-bg:#F5E0D5;--gold:#C08A28;--gold-bg:#F5EAD0;--rose:#C0506A;--rose-bg:#F8E0E6;--blue:#3A6B9A;--blue-bg:#D8E8F5;--pur:#6E4FA0;--pur-bg:#EDE5F8;--teal:#2E8B7A;--teal-bg:#D5F0EC;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);}
+.app{height:100%;display:flex;flex-direction:column;}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.page.active{display:flex;}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:100px;-webkit-overflow-scrolling:touch;}
+.topbar{padding:50px 22px 12px;background:var(--bg);flex-shrink:0;}
+.topbar-row{display:flex;justify-content:space-between;align-items:center;}
+.page-title{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:500;color:var(--bark);}
+.page-sub{font-size:0.75rem;color:var(--clay);letter-spacing:.05em;text-transform:uppercase;margin-top:2px;}
+.profile-bar{display:flex;gap:8px;padding:0 22px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.profile-bar::-webkit-scrollbar{display:none;}
+.pchip{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:30px;border:2px solid var(--bor);background:var(--sur);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;font-size:.82rem;font-weight:600;color:var(--clay);}
+.pchip.active{border-color:var(--bark);background:var(--bark);color:#fff;}
+.pchip .av{font-size:1rem;}
+.card{background:var(--sur);border-radius:18px;border:1px solid var(--bor);box-shadow:0 2px 12px rgba(92,61,32,.07);overflow:hidden;margin-bottom:10px;}
+.card-head{padding:14px 18px 10px;display:flex;justify-content:space-between;align-items:center;}
+.card-title{font-family:'Fraunces',serif;font-size:1rem;color:var(--bark);}
+.section{padding:0 22px;margin-bottom:20px;}
+.sec-lbl{font-size:.72rem;color:var(--clay);letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--bor);}
+.banner{display:flex;align-items:center;gap:10px;margin:5px 22px;border-radius:13px;padding:12px 14px;}
+.banner.bday{background:var(--gold-bg);border:1px solid #DDB84A;}
+.banner.warn{background:var(--rust-bg);border:1px solid #D8907A;}
+.banner.info{background:var(--blue-bg);border:1px solid #7AAED8;}
+.banner .bi{font-size:1.3rem;flex-shrink:0;}
+.banner .bt{font-size:.86rem;font-weight:600;}
+.banner .bs{font-size:.73rem;color:var(--clay);margin-top:1px;}
+.banner .bx{margin-left:auto;background:none;border:none;color:var(--stone);font-size:1.1rem;cursor:pointer;flex-shrink:0;}
+.hscroll{display:flex;gap:10px;padding:0 22px;overflow-x:auto;scrollbar-width:none;margin-bottom:20px;}
+.hscroll::-webkit-scrollbar{display:none;}
+.cal-today{background:var(--bark);color:#fff;border-radius:16px;padding:16px;min-width:120px;flex-shrink:0;}
+.ct-lbl{font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin-bottom:3px;}
+.ct-num{font-family:'Fraunces',serif;font-size:2.8rem;line-height:1;}
+.ct-mo{font-size:.78rem;opacity:.7;margin-top:1px;}
+.ct-ev{margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:.72rem;opacity:.85;}
+.ct-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;margin-right:4px;}
+.cal-chip{background:var(--sur);border:1px solid var(--bor);border-radius:13px;padding:11px 13px;min-width:145px;flex-shrink:0;}
+.cal-chip.bday{background:var(--gold-bg);border-color:#DDB84A;}
+.cal-chip.ev{background:var(--blue-bg);border-color:#7AAED8;}
+.cc-when{font-size:.66rem;color:var(--clay);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}
+.cc-what{font-size:.88rem;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.cc-sub{font-size:.72rem;color:var(--clay);}
+.gc{margin:0 22px 14px;background:linear-gradient(135deg,var(--bark),#8B5E35);border-radius:18px;padding:20px;color:#fff;position:relative;overflow:hidden;}
+.gc::before{content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;background:rgba(255,255,255,.05);border-radius:50%;}
+.gc-g{font-family:'Fraunces',serif;font-size:1.45rem;font-weight:300;font-style:italic;margin-bottom:3px;}
+.gc-d{font-size:.76rem;opacity:.65;}
+.gc-stats{display:flex;gap:14px;margin-top:14px;}
+.gc-stat .n{font-family:'Fraunces',serif;font-size:1.5rem;line-height:1;}
+.gc-stat .l{font-size:.62rem;opacity:.65;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+.trow{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--warm);cursor:pointer;transition:background .1s;}
+.trow:last-child{border:none;}
+.trow:active{background:var(--warm);}
+.trow.done{opacity:.45;}
+.tchk{width:21px;height:21px;border-radius:6px;border:2px solid var(--stone);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.tchk.on{background:var(--sage);border-color:var(--sage);}
+.tchk.on::after{content:'✓';color:#fff;font-size:.73rem;font-weight:700;}
+.tic{width:33px;height:33px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.tb{flex:1;min-width:0;}
+.tn{font-size:.85rem;font-weight:500;}
+.tm{font-size:.71rem;color:var(--clay);margin-top:1px;display:flex;align-items:center;gap:5px;}
+.udot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ur{background:var(--rust);}
+.uy{background:var(--gold);}
+.ug{background:var(--sage);}
+.pbadge{background:var(--gold-bg);color:var(--gold);border-radius:20px;padding:2px 7px;font-size:.69rem;font-weight:600;flex-shrink:0;}
+.badge{border-radius:20px;padding:3px 9px;font-size:.69rem;font-weight:600;}
+.b-ok{background:var(--sage-bg);color:var(--sage);}
+.b-warn{background:var(--gold-bg);color:var(--gold);}
+.b-alert{background:var(--rust-bg);color:var(--rust);}
+.eco-row{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--warm);}
+.eco-row:last-child{border:none;}
+.eco-tip{background:var(--gold-bg);border-radius:11px;padding:11px 13px;font-size:.79rem;line-height:1.55;margin:8px 16px 12px;color:var(--ink);}
+.eco-tip strong{color:var(--bark);}
+.dh{background:linear-gradient(135deg,#4F7C54,#3A6040);border-radius:16px;padding:18px;color:#fff;margin-bottom:8px;position:relative;overflow:hidden;}
+.dh::after{content:'🍽️';position:absolute;right:12px;bottom:6px;font-size:2.2rem;opacity:.2;}
+.dh-l{font-size:.67rem;letter-spacing:.1em;text-transform:uppercase;opacity:.65;margin-bottom:4px;}
+.dh-n{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:500;margin-bottom:7px;}
+.dh-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.dh-tag{background:rgba(255,255,255,.18);border-radius:20px;padding:2px 8px;font-size:.68rem;font-weight:500;}
+.wday{background:var(--sur);border-radius:11px;border:1px solid var(--bor);padding:10px 13px;display:flex;align-items:center;gap:11px;margin-bottom:6px;cursor:pointer;transition:all .15s;}
+.wday:active{background:var(--warm);}
+.wd-d{font-size:.69rem;color:var(--clay);font-weight:600;text-transform:uppercase;letter-spacing:.05em;width:48px;flex-shrink:0;}
+.wd-m{font-size:.86rem;font-weight:500;flex:1;}
+.wd-n{font-size:.69rem;color:var(--sage);}
+.wd-f{font-size:.69rem;color:var(--blue);}
+.shop-btn2{background:var(--bark);color:#fff;border:none;border-radius:7px;padding:4px 9px;font-family:'Outfit',sans-serif;font-size:.71rem;font-weight:600;cursor:pointer;flex-shrink:0;}
+.log-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--warm);font-size:.82rem;}
+.log-row:last-child{border:none;}
+.log-type{display:flex;align-items:center;gap:5px;font-weight:500;}
+.log-date{font-size:.71rem;color:var(--clay);margin-top:2px;}
+.lbadge{border-radius:6px;padding:2px 6px;font-size:.66rem;font-weight:600;}
+.lb-s{background:var(--rust-bg);color:#8B3A1A;}
+.lb-c{background:var(--blue-bg);color:#1A5E8B;}
+.train-hero{margin:0 22px 14px;border-radius:18px;padding:20px;color:#fff;position:relative;overflow:hidden;}
+.train-hero.str{background:linear-gradient(135deg,#8B3A1A,#C05828);}
+.train-hero.car{background:linear-gradient(135deg,#1A5E8B,#2E7AB0);}
+.train-hero::after{position:absolute;right:14px;bottom:8px;font-size:2.5rem;opacity:.2;}
+.train-hero.str::after{content:'🏋️';}
+.train-hero.car::after{content:'🏃';}
+.th-l{font-size:.67rem;letter-spacing:.1em;text-transform:uppercase;opacity:.65;margin-bottom:4px;}
+.th-n{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:500;margin-bottom:9px;}
+.th-stats{display:flex;gap:14px;}
+.th-stat .n{font-family:'Fraunces',serif;font-size:1.4rem;line-height:1;}
+.th-stat .l{font-size:.61rem;opacity:.65;text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+.type-tabs{display:flex;gap:8px;padding:0 22px;margin-bottom:14px;flex-shrink:0;}
+.ttab{flex:1;padding:8px;border-radius:11px;border:2px solid var(--bor);background:var(--sur);font-family:'Outfit',sans-serif;font-size:.81rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--clay);}
+.ttab.on.str{background:#C05828;border-color:#C05828;color:#fff;}
+.ttab.on.car{background:#2E7AB0;border-color:#2E7AB0;color:#fff;}
+.ex-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--warm);}
+.ex-row:last-child{border:none;}
+.ex-ic{width:33px;height:33px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.ex-name{font-size:.85rem;font-weight:500;flex:1;}
+.ex-sets{font-size:.71rem;color:var(--clay);margin-top:1px;}
+.ex-inp{width:55px;padding:5px 6px;border:1.5px solid var(--bor);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.77rem;text-align:center;background:var(--bg);color:var(--ink);outline:none;}
+.ex-inp:focus{border-color:var(--clay);}
+.pb-wrap{padding:0 0 10px;}
+.pb-lbl{display:flex;justify-content:space-between;font-size:.74rem;color:var(--clay);margin-bottom:4px;}
+.pb-bg{background:var(--warm);border-radius:8px;height:7px;}
+.pb-fill{border-radius:8px;height:7px;transition:width .6s ease;}
+.pf-s{background:linear-gradient(90deg,#8B3A1A,#E07040);}
+.pf-c{background:linear-gradient(90deg,#1A5E8B,#4AA0D8);}
+.save-btn{width:100%;padding:12px;border:none;border-radius:11px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;margin-bottom:8px;color:#fff;}
+.save-btn.s{background:#C05828;}
+.save-btn.c{background:#2E7AB0;}
+.preg-hero{margin:0 22px 14px;background:linear-gradient(135deg,#C05070,#9B3558);border-radius:18px;padding:20px;color:#fff;text-align:center;}
+.preg-wk{font-family:'Fraunces',serif;font-size:3.2rem;line-height:1;font-weight:300;}
+.preg-lbl{font-size:.73rem;opacity:.7;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+.preg-msg{font-size:.86rem;opacity:.82;margin-top:9px;line-height:1.5;}
+.preg-prog{background:rgba(255,255,255,.2);border-radius:8px;height:5px;margin-top:14px;}
+.preg-fill{background:#fff;border-radius:8px;height:5px;}
+.preg-item{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-bottom:1px solid var(--warm);cursor:pointer;}
+.preg-item:last-child{border:none;}
+.preg-item.done{opacity:.5;}
+.pchk2{width:20px;height:20px;border-radius:50%;border:2px solid var(--rose);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s;}
+.pchk2.on{background:var(--rose);border-color:var(--rose);}
+.pchk2.on::after{content:'✓';color:#fff;font-size:.7rem;font-weight:700;}
+.pi-t{font-size:.85rem;font-weight:500;flex:1;}
+.pi-s{font-size:.71rem;color:var(--clay);margin-top:1px;}
+.ptri{border-radius:10px;padding:2px 7px;font-size:.66rem;font-weight:600;}
+.t1{background:var(--rose-bg);color:var(--rose);}
+.t2{background:var(--gold-bg);color:var(--gold);}
+.t3{background:var(--pur-bg);color:var(--pur);}
+.kid-card{background:var(--sur);border-radius:16px;border:1px solid var(--bor);overflow:hidden;margin-bottom:10px;}
+.kid-hdr{padding:14px 16px;display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#4F7C54,#2E6035);color:#fff;}
+.kid-av{font-size:1.7rem;}
+.kid-n{font-family:'Fraunces',serif;font-size:1.05rem;}
+.kid-a{font-size:.73rem;opacity:.75;}
+.kid-xp{margin-left:auto;text-align:right;}
+.kid-xp .xn{font-family:'Fraunces',serif;font-size:1.4rem;}
+.kid-xp .xl{font-size:.62rem;opacity:.7;text-transform:uppercase;letter-spacing:.05em;}
+.hw-item{display:flex;align-items:center;gap:9px;padding:9px 16px;border-bottom:1px solid var(--warm);cursor:pointer;}
+.hw-item:last-child{border:none;}
+.hw-ic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.hw-m{background:#FFF3CD;}.hw-n{background:#D4EDDA;}.hw-e{background:#F8D7DA;}
+.prof-card{background:var(--sur);border-radius:16px;border:1px solid var(--bor);padding:18px;margin-bottom:10px;display:flex;align-items:center;gap:13px;}
+.prof-av{font-size:2.3rem;width:54px;height:54px;border-radius:50%;background:var(--warm);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.prof-info{flex:1;}
+.prof-n{font-family:'Fraunces',serif;font-size:1.05rem;color:var(--bark);}
+.prof-r{font-size:.73rem;color:var(--clay);margin-top:2px;}
+.prof-pts{font-size:.79rem;color:var(--gold);font-weight:600;margin-top:3px;}
+.prof-tc .n{font-family:'Fraunces',serif;font-size:1.7rem;color:var(--bark);line-height:1;}
+.prof-tc .l{font-size:.63rem;color:var(--clay);text-transform:uppercase;letter-spacing:.05em;}
+.po{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--warm);cursor:pointer;transition:background .1s;}
+.po:last-child{border:none;}
+.po:active{background:var(--warm);}
+.po-ic{font-size:1.5rem;width:44px;height:44px;border-radius:11px;background:var(--warm);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.po-n{font-size:.9rem;font-weight:600;}
+.po-d{font-size:.73rem;color:var(--clay);margin-top:2px;}
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(37,26,14,.6);z-index:200;align-items:flex-end;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:18px 18px 44px;animation:slideUp .3s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--bor);border-radius:4px;margin:0 auto 16px;}
+.modal-h{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--bark);margin-bottom:3px;}
+.modal-sub{font-size:.76rem;color:var(--clay);margin-bottom:14px;}
+.pant-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.pant-chip{background:var(--sur);border:1.5px solid var(--bor);border-radius:20px;padding:4px 11px;font-size:.77rem;cursor:pointer;transition:all .15s;}
+.pant-chip.have{background:var(--sage);border-color:var(--sage);color:#fff;}
+.shop-sec{margin-bottom:12px;}
+.shop-cat-l{font-size:.67rem;color:var(--stone);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:6px;}
+.shop-line{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--warm);}
+.shop-line:last-child{border:none;}
+.shop-cb{width:20px;height:20px;border-radius:6px;border:2px solid var(--stone);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.shop-cb.on{background:var(--sage);border-color:var(--sage);}
+.shop-cb.on::after{content:'✓';color:#fff;font-size:.71rem;font-weight:700;}
+.shop-nm{font-size:.84rem;flex:1;}
+.shop-nm.on{text-decoration:line-through;color:var(--stone);}
+.shop-qty{font-size:.74rem;color:var(--clay);}
+.lf-tag{font-size:.61rem;background:var(--teal-bg);color:var(--teal);border-radius:4px;padding:1px 4px;margin-left:3px;}
+.gen-btn{width:100%;padding:12px;background:var(--bark);color:#fff;border:none;border-radius:11px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:12px;}
+.cls-btn{width:100%;padding:11px;background:var(--warm);color:var(--clay);border:none;border-radius:11px;font-family:'Outfit',sans-serif;font-size:.86rem;font-weight:500;cursor:pointer;margin-top:7px;}
+/* CHAT */
+.ai-fab{position:fixed;bottom:90px;right:18px;width:52px;height:52px;background:var(--bark);border-radius:50%;border:none;font-size:1.25rem;box-shadow:0 4px 20px rgba(92,61,32,.4);cursor:pointer;z-index:99;display:flex;align-items:center;justify-content:center;}
+.chat-panel{display:none;position:fixed;inset:0;z-index:300;flex-direction:column;background:var(--bg);}
+.chat-panel.open{display:flex;}
+.chat-top{padding:50px 18px 12px;background:var(--sur);border-bottom:1px solid var(--bor);display:flex;align-items:center;gap:10px;}
+.chat-back{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--clay);}
+.chat-title{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--bark);flex:1;}
+.voice-status{font-size:.72rem;color:var(--sage);font-weight:600;}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:9px;}
+.msg{max-width:87%;border-radius:15px;padding:10px 13px;font-size:.85rem;line-height:1.5;}
+.msg.bot{background:var(--sur);border:1px solid var(--bor);align-self:flex-start;}
+.msg.user{background:var(--bark);color:#fff;align-self:flex-end;}
+.chat-inp-row{padding:10px 14px 32px;background:var(--sur);border-top:1px solid var(--bor);display:flex;gap:7px;align-items:center;}
+.chat-inp{flex:1;padding:10px 14px;border:1.5px solid var(--bor);border-radius:22px;font-family:'Outfit',sans-serif;font-size:.85rem;background:var(--bg);outline:none;color:var(--ink);}
+.chat-inp:focus{border-color:var(--clay);}
+.chat-send{width:40px;height:40px;background:var(--bark);border:none;border-radius:50%;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mic-btn{width:40px;height:40px;background:var(--sur);border:2px solid var(--bor);border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.mic-btn.listening{background:var(--rose);border-color:var(--rose);animation:pulse .8s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.typing span{width:6px;height:6px;background:var(--stone);border-radius:50%;display:inline-block;animation:bounce 1.2s infinite;margin:0 2px;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+/* NAV */
+.bot-nav{position:fixed;bottom:0;left:0;right:0;background:var(--sur);border-top:1px solid var(--bor);display:flex;z-index:100;padding:9px 0 20px;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--stone);transition:color .15s;}
+.nav-btn.active{color:var(--bark);}
+.nav-btn .ni{font-size:1.25rem;}
+.nav-btn .nl{font-size:.58rem;font-weight:600;letter-spacing:.02em;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.gc{animation:fadeUp .3s ease both;}
+.banner{animation:fadeUp .3s .05s ease both;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><div class="page-title" id="greeting">God morgen 🌿</div><div class="page-sub" id="datestr">Mandag · 9. mars 2026</div></div>
+      <div style="font-size:.8rem;color:var(--clay);background:var(--sur);border:1px solid var(--bor);border-radius:30px;padding:5px 12px;">🌧️ 7° Bryne</div>
+    </div>
+  </div>
+  <div class="profile-bar" id="home-profiles">
+    <div class="pchip active" data-who="all"><span class="av">🏠</span>Alle</div>
+    <div class="pchip" data-who="me"><span class="av">👨</span>Meg</div>
+    <div class="pchip" data-who="maria"><span class="av">👩</span>Maria</div>
+  </div>
+  <div class="scroll">
+    <div class="gc">
+      <div class="gc-g" id="gc-g">Hei begge to!</div>
+      <div class="gc-d" id="gc-d">I dag er det mandag 9. mars</div>
+      <div class="gc-stats">
+        <div class="gc-stat"><div class="n">3</div><div class="l">Oppgaver</div></div>
+        <div class="gc-stat"><div class="n">80</div><div class="l">Dager til Marias 30</div></div>
+        <div class="gc-stat"><div class="n">51</div><div class="l">Til hagefest</div></div>
+      </div>
+    </div>
+    <div class="banner bday" id="b1"><div class="bi">🎂</div><div><div class="bt">Maria fyller 30 om 80 dager!</div><div class="bs">28. mai — rund dag 🎉</div></div><button class="bx">×</button></div>
+    <div class="banner warn" id="b2"><div class="bi">🔨</div><div><div class="bt">Terrassebytte i april</div><div class="bs">Husk å rive gammel terrasse først!</div></div><button class="bx">×</button></div>
+    <div class="hscroll">
+      <div class="cal-today"><div class="ct-lbl">I dag</div><div class="ct-num">9</div><div class="ct-mo">Mars 2026</div><div class="ct-ev"><div><span class="ct-dot"></span>Ingen avtaler</div><div><span class="ct-dot"></span>Klesvask!</div></div></div>
+      <div class="cal-chip ev"><div class="cc-when">📅 April</div><div class="cc-what">Bytte terrasse</div><div class="cc-sub">Rive gammel først</div></div>
+      <div class="cal-chip bday"><div class="cc-when">🎂 28. mai</div><div class="cc-what">Marias 30-årsdag</div><div class="cc-sub">80 dager igjen</div></div>
+      <div class="cal-chip ev"><div class="cc-when">🌸 30. mai</div><div class="cc-what">Hagefest!</div><div class="cc-sub">20+ gjester</div></div>
+      <div class="cal-chip"><div class="cc-when">🎨 2027</div><div class="cc-what">Male huset</div><div class="cc-sub">Start å hente tilbud</div></div>
+    </div>
+    <div class="section">
+      <div class="sec-lbl">✅ Dagens oppgaver</div>
+      <div class="card">
+        <div class="trow" data-task="t1"><div class="tchk"></div><div class="tic" style="background:var(--rust-bg)">🧺</div><div class="tb"><div class="tn">Klesvask</div><div class="tm"><span>👨 Deg</span> · Forfaller i dag</div></div><div class="udot ur"></div></div>
+        <div class="trow" data-task="t2"><div class="tchk"></div><div class="tic" style="background:var(--gold-bg)">🧹</div><div class="tb"><div class="tn">Støvsuge</div><div class="tm"><span>👩 Maria</span> · 3 dager siden</div></div><div class="udot uy"></div></div>
+        <div class="trow" data-task="t3"><div class="tchk"></div><div class="tic" style="background:var(--sage-bg)">🚿</div><div class="tb"><div class="tn">Vaske bad</div><div class="tm"><span>👩 Maria</span> · Om 2 dager</div></div><div class="udot uy"></div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-lbl">🍽️ I kveld</div>
+      <div class="dh"><div class="dh-l">Mandag</div><div class="dh-n">Laksepasta med sitron</div><div class="dh-tags"><span class="dh-tag">30 min</span><span class="dh-tag">🥛 Lf-tilpasset</span><span class="dh-tag">2 pers</span></div></div>
+      <button class="gen-btn" id="shop-tonight-btn" style="margin-top:0">🛒 Generer handleliste for i kveld</button>
+    </div>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="page" id="page-tasks">
+  <div class="topbar"><div class="topbar-row"><div><div class="page-title">Oppgaver</div><div class="page-sub">Fordelt på husstanden</div></div></div></div>
+  <div class="profile-bar" id="task-profiles">
+    <div class="pchip active" data-who="all"><span class="av">🏠</span>Alle</div>
+    <div class="pchip" data-who="me"><span class="av">👨</span>Meg</div>
+    <div class="pchip" data-who="maria"><span class="av">👩</span>Maria</div>
+  </div>
+  <div class="scroll">
+    <div class="section"><div class="sec-lbl">🔴 Snarest</div><div class="card">
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--rust-bg)">🧺</div><div class="tb"><div class="tn">Klesvask</div><div class="tm">👨 Deg · Ukentlig · Forfaller i dag</div></div><div class="pbadge">+5p</div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--rust-bg)">🧹</div><div class="tb"><div class="tn">Støvsuge</div><div class="tm">👩 Maria · Ukentlig · Forfalt</div></div><div class="pbadge">+5p</div></div>
+    </div></div>
+    <div class="section"><div class="sec-lbl">🟡 Denne uken</div><div class="card">
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--gold-bg)">🚿</div><div class="tb"><div class="tn">Vaske bad</div><div class="tm">👩 Maria · Om 2 dager</div></div><div class="pbadge">+5p</div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--gold-bg)">🪟</div><div class="tb"><div class="tn">Vaske stue</div><div class="tm">👨 Deg · Om 4 dager</div></div><div class="pbadge">+3p</div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--gold-bg)">🍽️</div><div class="tb"><div class="tn">Rydde oppvask</div><div class="tm">👨👩 Begge · Daglig</div></div><div class="pbadge">+2p</div></div>
+    </div></div>
+    <div class="section"><div class="sec-lbl">🟢 Kommende</div><div class="card">
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--blue-bg)">🚗</div><div class="tb"><div class="tn">Skifte sommerdekk</div><div class="tm">👨 Deg · April</div></div><div class="udot ug"></div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--teal-bg)">💧</div><div class="tb"><div class="tn">Rense sluk</div><div class="tm">👨 Deg · Om 2 uker</div></div><div class="udot ug"></div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--pur-bg)">🔨</div><div class="tb"><div class="tn">Rive gammel terrasse</div><div class="tm">👨👩 Begge · Før april</div></div><div class="udot uy"></div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--rose-bg)">🌸</div><div class="tb"><div class="tn">Planlegge hagefest 30. mai</div><div class="tm">👨👩 Begge · 20+ gjester</div></div><div class="udot uy"></div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--blue-bg)">🌊</div><div class="tb"><div class="tn">Spyle huset</div><div class="tm">👨 Deg · Vår, over 10°</div></div><div class="udot ug"></div></div>
+      <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--gold-bg)">🎨</div><div class="tb"><div class="tn">Hente tilbud husmaling</div><div class="tm">👨👩 Begge · 2027 — start tidlig</div></div><div class="udot ug"></div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- DINNER -->
+<div class="page" id="page-dinner">
+  <div class="topbar"><div class="topbar-row"><div><div class="page-title">Middag & mat</div><div class="page-sub">Ukesplan · Laktosefri tilpasning</div></div></div></div>
+  <div class="scroll">
+    <div class="section"><div class="sec-lbl">🍽️ Ukens plan</div>
+      <div class="wday" data-meal="Laksepasta"><div class="wd-d">Man</div><div style="flex:1"><div class="wd-m">Laksepasta med sitron</div><div class="wd-n">✓ Lf-fløte</div></div><button class="shop-btn2">🛒</button></div>
+      <div class="wday" data-meal="Kyllingwok"><div class="wd-d">Tir</div><div style="flex:1"><div class="wd-m">Kyllingwok</div><div class="wd-n">✓ Naturlig lf</div></div><button class="shop-btn2">🛒</button></div>
+      <div class="wday" data-meal="Tomatsuppe"><div class="wd-d">Ons</div><div style="flex:1"><div class="wd-m">Tomatsuppe & brød</div><div class="wd-n">✓ Laktosefri</div></div><button class="shop-btn2">🛒</button></div>
+      <div class="wday" data-meal="Biff"><div class="wd-d">Tor</div><div style="flex:1"><div class="wd-m">Biff & rotgrønnsaker</div><div class="wd-n">✓ Naturlig lf</div></div><button class="shop-btn2">🛒</button></div>
+      <div class="wday" data-meal="Tacos"><div class="wd-d">Fre</div><div style="flex:1"><div class="wd-m">Tacos 🌮</div><div class="wd-n">Bruk lf rømme</div></div><button class="shop-btn2">🛒</button></div>
+      <div class="wday" data-meal="Lasagne"><div class="wd-d">Lør</div><div style="flex:1"><div class="wd-m">Lasagne (dobbel — frys!)</div><div class="wd-f">🧊 Lag ekstra</div></div><button class="shop-btn2">🛒</button></div>
+      <div class="wday"><div class="wd-d">Søn</div><div style="flex:1"><div class="wd-m">Restmiddag 🌿</div><div class="wd-n">Nullsvinn-dag</div></div><span style="font-size:.73rem;color:var(--sage)">Ingen handel</span></div>
+    </div>
+    <div class="section"><div class="sec-lbl">🧊 Fryseforslag</div><div class="card">
+      <div class="eco-row"><span>Lasagne (lørdag)</span><span style="font-size:.82rem;color:var(--clay)">Dobbel porsjon</span></div>
+      <div class="eco-row"><span>Kjøttboller i saus</span><span style="font-size:.82rem;color:var(--clay)">Fryser godt</span></div>
+      <div class="eco-row"><span>Linsesuppe</span><span style="font-size:.82rem;color:var(--clay)">Batch-kok</span></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- TRAINING -->
+<div class="page" id="page-training">
+  <div class="topbar"><div class="topbar-row"><div><div class="page-title">Trening 💪</div><div class="page-sub">Styrke · Kondisjon · Historikk</div></div></div></div>
+  <div class="profile-bar" id="train-profiles">
+    <div class="pchip active" data-who="me"><span class="av">👨</span>Meg</div>
+    <div class="pchip" data-who="maria"><span class="av">👩</span>Maria</div>
+  </div>
+  <div class="type-tabs">
+    <button class="ttab on str" id="ttab-str">🏋️ Styrke</button>
+    <button class="ttab car" id="ttab-car">🏃 Kondisjon</button>
+  </div>
+  <div class="scroll">
+    <div id="panel-str">
+      <div class="train-hero str"><div class="th-l">Denne uken · Styrketrening</div><div class="th-n" id="str-hl">Bryst &amp; Triceps</div><div class="th-stats"><div class="th-stat"><div class="n" id="s-sess">2</div><div class="l">Økter</div></div><div class="th-stat"><div class="n" id="s-sets">14</div><div class="l">Sett</div></div><div class="th-stat"><div class="n">3</div><div class="l">Streak 🔥</div></div></div></div>
+      <div class="section"><div class="sec-lbl">📅 Ukesplan styrke</div><div class="card" id="str-weekplan"></div></div>
+      <div class="section"><div class="sec-lbl">💪 Dagens økt — logg kg</div><div class="card" id="str-exercises"></div><button class="save-btn s" id="save-str-btn">✅ Lagre styrkeøkt</button></div>
+      <div class="section"><div class="sec-lbl">📈 Personlige rekorder</div><div class="card"><div style="padding:14px 16px 6px">
+        <div class="pb-wrap"><div class="pb-lbl"><span>Benkpress</span><span>80 kg</span></div><div class="pb-bg"><div class="pb-fill pf-s" style="width:72%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-lbl"><span>Knebøy</span><span>100 kg</span></div><div class="pb-bg"><div class="pb-fill pf-s" style="width:85%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-lbl"><span>Markløft</span><span>120 kg</span></div><div class="pb-bg"><div class="pb-fill pf-s" style="width:90%"></div></div></div>
+        <div class="pb-wrap" style="padding-bottom:4px"><div class="pb-lbl"><span>Skulderpress</span><span>55 kg</span></div><div class="pb-bg"><div class="pb-fill pf-s" style="width:50%"></div></div></div>
+      </div></div></div>
+    </div>
+    <div id="panel-car" style="display:none">
+      <div class="train-hero car"><div class="th-l">Denne uken · Kondisjon</div><div class="th-n">Løping &amp; sykkel</div><div class="th-stats"><div class="th-stat"><div class="n" id="c-sess">1</div><div class="l">Økter</div></div><div class="th-stat"><div class="n" id="c-km">8</div><div class="l">km</div></div><div class="th-stat"><div class="n" id="c-min">42</div><div class="l">min</div></div></div></div>
+      <div class="section"><div class="sec-lbl">📅 Ukesplan kondisjon</div><div class="card" id="car-weekplan"></div></div>
+      <div class="section"><div class="sec-lbl">🏃 Logg kondisjon</div><div class="card">
+        <div class="ex-row"><div class="ex-ic" style="background:var(--blue-bg)">🏃</div><div style="flex:1"><div class="ex-name">Løping</div><div class="ex-sets">km · minutter</div></div><input class="ex-inp" id="run-km" placeholder="km" type="number"><input class="ex-inp" id="run-min" placeholder="min" type="number"></div>
+        <div class="ex-row"><div class="ex-ic" style="background:var(--teal-bg)">🚴</div><div style="flex:1"><div class="ex-name">Sykkel</div><div class="ex-sets">km · minutter</div></div><input class="ex-inp" id="bike-km" placeholder="km" type="number"><input class="ex-inp" id="bike-min" placeholder="min" type="number"></div>
+        <div class="ex-row"><div class="ex-ic" style="background:var(--sage-bg)">🏊</div><div style="flex:1"><div class="ex-name">Annet</div><div class="ex-sets">minutter</div></div><input class="ex-inp" id="other-min" placeholder="min" type="number"></div>
+      </div><button class="save-btn c" id="save-car-btn">✅ Lagre kondisjon</button></div>
+      <div class="section"><div class="sec-lbl">📈 Uksmål kondisjon</div><div class="card"><div style="padding:14px 16px 6px">
+        <div class="pb-wrap"><div class="pb-lbl"><span>Ukentlige km</span><span>8 / 20 km</span></div><div class="pb-bg"><div class="pb-fill pf-c" style="width:40%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-lbl"><span>Aktive minutter</span><span>42 / 150</span></div><div class="pb-bg"><div class="pb-fill pf-c" style="width:28%"></div></div></div>
+        <div class="pb-wrap" style="padding-bottom:4px"><div class="pb-lbl"><span>Økter</span><span>1 / 3</span></div><div class="pb-bg"><div class="pb-fill pf-c" style="width:33%"></div></div></div>
+      </div></div></div>
+    </div>
+    <div class="section"><div class="sec-lbl">📋 Felles treningslogg</div><div class="card" id="train-log">
+      <div class="log-row"><div><div class="log-type"><span class="lbadge lb-s">Styrke</span> Bein &amp; rygg</div><div class="log-date">Lør 7. mars · 👨 Deg</div></div></div>
+      <div class="log-row"><div><div class="log-type"><span class="lbadge lb-c">Kondis</span> Løping 6 km</div><div class="log-date">Fre 6. mars · 👩 Maria</div></div></div>
+      <div class="log-row"><div><div class="log-type"><span class="lbadge lb-s">Styrke</span> Bryst &amp; triceps</div><div class="log-date">Tor 5. mars · 👨 Deg</div></div></div>
+      <div class="log-row"><div><div class="log-type"><span class="lbadge lb-c">Kondis</span> Sykkel 12 km</div><div class="log-date">Ons 4. mars · 👩 Maria</div></div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- FAMILY -->
+<div class="page" id="page-family">
+  <div class="topbar"><div class="topbar-row"><div><div class="page-title">Familie</div><div class="page-sub">Profiler · Barn · Graviditet</div></div></div></div>
+  <div class="scroll">
+    <div class="section"><div class="sec-lbl">👥 Husstanden</div>
+      <div class="prof-card"><div class="prof-av">👨</div><div class="prof-info"><div class="prof-n">Deg</div><div class="prof-r">Voksen · Bryne</div><div class="prof-pts">⭐ 142 poeng denne måneden</div></div><div class="prof-tc"><div class="n">4</div><div class="l">Oppgaver</div></div></div>
+      <div class="prof-card"><div class="prof-av">👩</div><div class="prof-info"><div class="prof-n">Maria</div><div class="prof-r">Voksen · f. 28. mai 1996</div><div class="prof-pts">⭐ 118 poeng denne måneden</div></div><div class="prof-tc"><div class="n">3</div><div class="l">Oppgaver</div></div></div>
+    </div>
+    <div class="section"><div class="sec-lbl">➕ Legg til</div><div class="card">
+      <div class="po" id="btn-preg"><div class="po-ic">🤰</div><div><div class="po-n">Graviditetsassistent</div><div class="po-d">Sjekklister, ukesoversikt og forberedelser</div></div><div style="font-size:1rem;color:var(--stone)">→</div></div>
+      <div class="po" id="btn-kid"><div class="po-ic">👶</div><div><div class="po-n">Legg til barn</div><div class="po-d">Lekser, oppgaver og poengbelønning</div></div><div style="font-size:1rem;color:var(--stone)">→</div></div>
+    </div></div>
+    <div id="preg-section" style="display:none">
+      <div class="preg-hero"><div class="preg-wk">12</div><div class="preg-lbl">Svangerskapsuke</div><div class="preg-msg">Babyen er nå på størrelse med en plomme 🍑 Kvalme avtar snart.</div><div class="preg-prog"><div class="preg-fill" style="width:30%"></div></div></div>
+      <div class="section"><div class="sec-lbl">🤰 Graviditets-sjekkliste</div><div class="card" id="preg-list"></div></div>
+    </div>
+    <div id="kids-section" style="display:none">
+      <div class="section"><div class="sec-lbl">👶 Barn</div>
+        <div class="kid-card">
+          <div class="kid-hdr"><div class="kid-av">🧒</div><div><div class="kid-n">Emma</div><div class="kid-a">8 år · 2. klasse</div></div><div class="kid-xp"><div class="xn">340</div><div class="xl">Stjerner</div></div></div>
+          <div style="padding:10px 16px 3px;font-size:.7rem;color:var(--clay);font-weight:700;text-transform:uppercase;letter-spacing:.06em">📚 Lekser</div>
+          <div class="hw-item"><div class="tchk"></div><div class="hw-ic hw-m">🔢</div><div style="flex:1"><div style="font-size:.84rem;font-weight:500">Matte s. 34–36</div><div style="font-size:.71rem;color:var(--clay)">Frist: torsdag</div></div></div>
+          <div class="hw-item"><div class="tchk"></div><div class="hw-ic hw-n">📖</div><div style="flex:1"><div style="font-size:.84rem;font-weight:500">Lese 20 min</div><div style="font-size:.71rem;color:var(--clay)">Hver kveld</div></div></div>
+          <div class="hw-item"><div class="tchk"></div><div class="hw-ic hw-e">🇬🇧</div><div style="flex:1"><div style="font-size:.84rem;font-weight:500">Gloser uke 10</div><div style="font-size:.71rem;color:var(--clay)">Frist: fredag</div></div></div>
+          <div style="padding:10px 16px 3px;font-size:.7rem;color:var(--clay);font-weight:700;text-transform:uppercase;letter-spacing:.06em">⭐ Oppgaver</div>
+          <div class="trow"><div class="tchk"></div><div class="tic" style="background:var(--gold-bg)">🛏️</div><div class="tb"><div class="tn">Rydde rommet</div><div class="tm">Daglig</div></div><div class="pbadge">+10⭐</div></div>
+          <div class="trow" style="border:none"><div class="tchk"></div><div class="tic" style="background:var(--sage-bg)">🐾</div><div class="tb"><div class="tn">Mate kjæledyr</div><div class="tm">Morgen og kveld</div></div><div class="pbadge">+5⭐</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ECONOMY -->
+<div class="page" id="page-economy">
+  <div class="topbar"><div class="topbar-row"><div><div class="page-title">Økonomi 💰</div><div class="page-sub">Lån · Forsikring · Abonnementer</div></div></div></div>
+  <div class="scroll">
+    <div class="section"><div class="sec-lbl">🏦 Boliglån</div><div class="card">
+      <div class="card-head"><div class="card-title">Boliglån</div><span class="badge b-warn">Følg med</span></div>
+      <div class="eco-row"><span>Styringsrenten 2026</span><span style="font-weight:600;color:var(--clay)">4,50 %</span></div>
+      <div class="eco-row"><span>Forventet utvikling</span><span style="font-weight:600;color:var(--clay)">Nedgang 2026</span></div>
+      <div class="eco-tip"><strong>💡 Rentetips:</strong> Norges Bank signaliserer rentekutt i 2026. Med stigende oljepris kan det forskyves. <strong>Ikke lås renten nå</strong> — flytende er fortsatt best. Se finansportalen.no.</div>
+    </div></div>
+    <div class="section"><div class="sec-lbl">📺 Abonnementer</div><div class="card">
+      <div class="card-head"><div class="card-title">Streaming</div><span class="badge b-warn">607 kr/mnd</span></div>
+      <div class="eco-row"><span>Netflix</span><span style="font-weight:600;color:var(--clay)">~179 kr</span></div>
+      <div class="eco-row"><span>HBO Max</span><span style="font-weight:600;color:var(--clay)">~129 kr</span></div>
+      <div class="eco-row"><span>Viaplay</span><span style="font-weight:600;color:var(--clay)">~299 kr</span></div>
+      <div class="eco-tip"><strong>💡 Tips:</strong> 3 tjenester = 7 200 kr/år. Vurder å rotere kvartalsvis. Viaplay er dyrest — kun verdt det ved aktivt sportsfølge.</div>
+    </div></div>
+    <div class="section"><div class="sec-lbl">🛡️ Forsikringer</div><div class="card">
+      <div class="card-head"><div class="card-title">Forsikringsoversikt</div><span class="badge b-alert">Ikke lagt inn</span></div>
+      <div style="padding:12px 16px;font-size:.82rem;color:var(--clay);line-height:1.6">Legg inn forsikringene dine så varsler assistenten deg 2 mnd før fornyelse. Sammenlign på finansportalen.no.</div>
+      <div class="eco-row" style="cursor:pointer;color:var(--blue)"><span>+ Legg til innboforsikring</span></div>
+      <div class="eco-row" style="cursor:pointer;color:var(--blue)"><span>+ Legg til bilforsikring</span></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- SHOP MODAL -->
+<div class="modal-ov" id="shopModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-h" id="shop-title">Handleliste</div>
+    <div class="modal-sub">Kryss av det dere allerede har — listen tilpasses!</div>
+    <div style="font-size:.7rem;color:var(--clay);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px">Har dere hjemme:</div>
+    <div class="pant-chips" id="pantry-chips">
+      <div class="pant-chip" data-item="pasta">Pasta</div>
+      <div class="pant-chip" data-item="ris">Ris</div>
+      <div class="pant-chip" data-item="løk">Løk</div>
+      <div class="pant-chip" data-item="hvitløk">Hvitløk</div>
+      <div class="pant-chip" data-item="tomater">Herm. tomater</div>
+      <div class="pant-chip" data-item="olje">Olivenolje</div>
+      <div class="pant-chip" data-item="soyasaus">Soyasaus</div>
+      <div class="pant-chip" data-item="buljong">Buljong</div>
+      <div class="pant-chip" data-item="egg">Egg</div>
+      <div class="pant-chip" data-item="lf-fløte">Lf-fløte</div>
+    </div>
+    <div id="shop-list-content"></div>
+    <button class="gen-btn" id="gen-list-btn">🛒 Generer handleliste</button>
+    <button class="cls-btn" id="close-shop-btn">Lukk</button>
+  </div>
+</div>
+
+<!-- AI CHAT -->
+<button class="ai-fab" id="open-chat-btn">🤖</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-top">
+    <button class="chat-back" id="close-chat-btn">←</button>
+    <div class="chat-title">Hjemmeassistent 🏠</div>
+    <div class="voice-status" id="voice-status"></div>
+  </div>
+  <div class="chat-msgs" id="chat-msgs">
+    <div class="msg bot">Hei! Jeg er hjemmeassistenten din. Jeg kjenner til Maria og deg, ukens middag, oppgavene og kommende hendelser. Du kan skrive eller <strong>trykke mikrofonen</strong> for å snakke med meg 🎙️</div>
+  </div>
+  <div class="chat-inp-row">
+    <input class="chat-inp" id="chat-inp" placeholder="Skriv eller trykk 🎙️ for å snakke...">
+    <button class="mic-btn" id="mic-btn" title="Snakk til assistenten">🎙️</button>
+    <button class="chat-send" id="chat-send">↑</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bot-nav">
+  <button class="nav-btn active" data-page="home"><div class="ni">🏠</div><div class="nl">Hjem</div></button>
+  <button class="nav-btn" data-page="tasks"><div class="ni">✅</div><div class="nl">Oppgaver</div></button>
+  <button class="nav-btn" data-page="dinner"><div class="ni">🍽️</div><div class="nl">Middag</div></button>
+  <button class="nav-btn" data-page="training"><div class="ni">💪</div><div class="nl">Trening</div></button>
+  <button class="nav-btn" data-page="family"><div class="ni">👨‍👩‍👧</div><div class="nl">Familie</div></button>
+  <button class="nav-btn" data-page="economy"><div class="ni">💰</div><div class="nl">Økonomi</div></button>
+</div>
+
+</div>
+<script>
+// =================== NAVIGATION ===================
+document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const p = btn.dataset.page;
+    document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + p).classList.add('active');
+    btn.classList.add('active');
+  });
+});
+
+// =================== GREETING ===================
+(function() {
+  const h = new Date().getHours();
+  const g = h<5?'God natt 🌙':h<12?'God morgen 🌿':h<18?'God ettermiddag ☀️':'God kveld 🌙';
+  const gc = h<12?'Hei begge to!':h<18?'Hei!':'God kveld begge to!';
+  document.getElementById('greeting').textContent = g;
+  document.getElementById('gc-g').textContent = gc;
+  const days=['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
+  const mo=['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  const d = new Date();
+  document.getElementById('datestr').textContent = `${days[d.getDay()]} · ${d.getDate()}. ${mo[d.getMonth()]} ${d.getFullYear()}`;
+  document.getElementById('gc-d').textContent = `I dag er det ${days[d.getDay()].toLowerCase()} ${d.getDate()}. ${mo[d.getMonth()]}`;
+})();
+
+// =================== BANNERS ===================
+document.querySelectorAll('.bx').forEach(btn => btn.addEventListener('click', () => btn.closest('.banner').remove()));
+
+// =================== TASKS (generic toggle) ===================
+document.addEventListener('click', e => {
+  const row = e.target.closest('.trow, .hw-item, .preg-item');
+  if (!row) return;
+  const chk = row.querySelector('.tchk, .pchk2');
+  if (chk) { chk.classList.toggle('on'); row.classList.toggle('done'); }
+});
+
+// =================== PROFILE CHIPS ===================
+['home-profiles','task-profiles','train-profiles'].forEach(id => {
+  const bar = document.getElementById(id);
+  if (!bar) return;
+  bar.querySelectorAll('.pchip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      bar.querySelectorAll('.pchip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      if (id === 'train-profiles') renderTraining(chip.dataset.who);
+    });
+  });
+});
+
+// =================== DINNER SHOP BUTTONS ===================
+document.querySelectorAll('.wday[data-meal]').forEach(el => {
+  el.addEventListener('click', e => { if (!e.target.classList.contains('shop-btn2')) return; openShop(el.dataset.meal); });
+  const btn = el.querySelector('.shop-btn2');
+  if (btn) btn.addEventListener('click', e => { e.stopPropagation(); openShop(el.dataset.meal); });
+});
+document.getElementById('shop-tonight-btn').addEventListener('click', () => openShop('Laksepasta'));
+
+// =================== SHOP MODAL ===================
+const shopDB = {
+  Laksepasta:{title:'Laksepasta — handleliste',cats:{'Fisk':[{n:'Laksefilet',q:'400g',lf:false}],'Meieri (lf)':[{n:'Lf-fløte',q:'2 dl',lf:true},{n:'Lf-smør',q:'litt',lf:true}],'Annet':[{n:'Sitron',q:'1 stk',lf:false},{n:'Parmesan lf',q:'50g',lf:true}]}},
+  Kyllingwok:{title:'Kyllingwok — handleliste',cats:{'Kjøtt':[{n:'Kyllingfileter',q:'400g',lf:false}],'Grønnsaker':[{n:'Paprika',q:'2 stk',lf:false},{n:'Brokkoli',q:'1 hode',lf:false}],'Annet':[{n:'Ingefær fersk',q:'1 bit',lf:false},{n:'Sesamolje',q:'litt',lf:false}]}},
+  Tacos:{title:'Tacos — handleliste',cats:{'Kjøtt':[{n:'Kjøttdeig',q:'400g',lf:false}],'Meieri (lf)':[{n:'Lf-rømme',q:'1 beger',lf:true}],'Annet':[{n:'Tacokrydder',q:'1 pk',lf:false},{n:'Tortilla',q:'1 pk',lf:false},{n:'Salsa',q:'1 glass',lf:false}]}},
+  Lasagne:{title:'Lasagne (dobbel!) — handleliste',cats:{'Kjøtt':[{n:'Kjøttdeig',q:'800g 🧊',lf:false}],'Meieri (lf)':[{n:'Lf-fløte',q:'4 dl',lf:true},{n:'Lf-ost',q:'200g',lf:true}],'Tørrmat':[{n:'Lasagneplater',q:'2 pk',lf:false}],'Grønnsaker':[{n:'Hermetiske tomater',q:'2 boks',lf:false}]}},
+  Biff:{title:'Biff & rotgrønt — handleliste',cats:{'Kjøtt':[{n:'Biff',q:'300g',lf:false}],'Grønnsaker':[{n:'Gulrot',q:'3 stk',lf:false},{n:'Pastinakk',q:'2 stk',lf:false}],'Annet':[{n:'Timian fersk',q:'litt',lf:false}]}},
+  Tomatsuppe:{title:'Tomatsuppe — handleliste',cats:{'Grønnsaker':[{n:'Cherrytomater',q:'500g',lf:false}],'Meieri (lf)':[{n:'Lf-fløte',q:'1 dl',lf:true}],'Bakst':[{n:'Surdeigsbrød',q:'1 stk',lf:false}]}}
+};
+let curMeal = 'Laksepasta';
+
+function openShop(meal) {
+  curMeal = meal || 'Laksepasta';
+  const d = shopDB[curMeal];
+  document.getElementById('shop-title').textContent = d ? d.title : 'Handleliste';
+  document.getElementById('shop-list-content').innerHTML = '';
+  document.querySelectorAll('.pant-chip').forEach(c => c.classList.remove('have'));
+  document.getElementById('shopModal').classList.add('open');
+}
+document.querySelectorAll('.pant-chip').forEach(c => c.addEventListener('click', () => c.classList.toggle('have')));
+document.getElementById('gen-list-btn').addEventListener('click', () => {
+  const have = Array.from(document.querySelectorAll('.pant-chip.have')).map(c => c.dataset.item);
+  const d = shopDB[curMeal]; if (!d) return;
+  let html = '';
+  for (const [cat, items] of Object.entries(d.cats)) {
+    const f = items.filter(i => !have.some(h => i.n.toLowerCase().includes(h)));
+    if (!f.length) continue;
+    html += `<div class="shop-sec"><div class="shop-cat-l">${cat}</div>`;
+    f.forEach(i => { html += `<div class="shop-line"><div class="shop-cb"></div><div class="shop-nm">${i.n}${i.lf?'<span class="lf-tag">lf</span>':''}</div><div class="shop-qty">${i.q}</div></div>`; });
+    html += '</div>';
+  }
+  if (!html) html = '<div style="text-align:center;padding:18px;color:var(--sage);font-size:.87rem">🎉 Dere har alt hjemme!</div>';
+  document.getElementById('shop-list-content').innerHTML = html;
+  // toggling checkboxes in dynamically added content
+  document.querySelectorAll('#shop-list-content .shop-cb').forEach(cb => {
+    cb.addEventListener('click', () => { cb.classList.toggle('on'); cb.nextElementSibling.classList.toggle('on'); });
+  });
+});
+document.getElementById('close-shop-btn').addEventListener('click', () => document.getElementById('shopModal').classList.remove('open'));
+document.getElementById('shopModal').addEventListener('click', e => { if (e.target === document.getElementById('shopModal')) document.getElementById('shopModal').classList.remove('open'); });
+
+// =================== TRAINING ===================
+const strProgs = {
+  me:[{day:'Man',name:'Bryst & Triceps',done:false,ex:['Benkpress','Skråpress','Dips','Triceps pushdown']},{day:'Tir',name:'Hvile / Kondis',done:false,ex:[]},{day:'Ons',name:'Rygg & Biceps',done:true,ex:['Markløft','Roing','Lat pulldown','Biceps curl']},{day:'Tor',name:'Hvile',done:false,ex:[]},{day:'Fre',name:'Bein & Skulder',done:false,ex:['Knebøy','Beinpress','Utfall','Skulderpress']},{day:'Lør',name:'Bein & Rygg',done:true,ex:['Knebøy','Rumensk markløft','Kabelrow']},{day:'Søn',name:'Hvile',done:false,ex:[]}],
+  maria:[{day:'Man',name:'Fullkropp A',done:false,ex:['Goblet squat','Hip thrust','Pushup','Kabelrow']},{day:'Tir',name:'Kondis / Yoga',done:false,ex:[]},{day:'Ons',name:'Fullkropp B',done:true,ex:['Rumensk markløft','Split squat','Skulderpress','Lat pulldown']},{day:'Tor',name:'Hvile',done:false,ex:[]},{day:'Fre',name:'Fullkropp A',done:false,ex:['Goblet squat','Hip thrust','Pushup','Kabelrow']},{day:'Lør',name:'Aktiv hvile',done:false,ex:[]},{day:'Søn',name:'Hvile',done:false,ex:[]}]
+};
+const carProgs = {
+  me:[{day:'Tir',name:'Intervall løping',ico:'🏃',target:'6×400m',done:false},{day:'Tor',name:'Rolig sykkel',ico:'🚴',target:'20 km',done:false},{day:'Søn',name:'Langtur løping',ico:'🏃',target:'8–10 km',done:false}],
+  maria:[{day:'Man',name:'Rolig løping',ico:'🏃',target:'5 km',done:false},{day:'Ons',name:'Sykkeltimer',ico:'🚴',target:'45 min',done:true},{day:'Fre',name:'Intervall',ico:'🏃',target:'4×800m',done:false}]
+};
+let curTrainWho = 'me';
+
+function renderTraining(who) {
+  who = who || curTrainWho; curTrainWho = who;
+  const sp = strProgs[who];
+  const swp = document.getElementById('str-weekplan');
+  swp.innerHTML = sp.map(d => `<div class="log-row"><div><div class="log-type">${d.done?'<span class="lbadge lb-s">✓</span>':'<span style="width:7px;height:7px;border-radius:50%;background:var(--bor);display:inline-block;margin-right:5px"></span>'} ${d.name}</div><div class="log-date">${d.day}${d.ex.length?' · '+d.ex.length+' øvelser':''}</div></div></div>`).join('');
+  const today = sp.find(d => d.ex.length && !d.done) || sp.find(d => d.ex.length);
+  const exC = document.getElementById('str-exercises');
+  if (today) {
+    document.getElementById('str-hl').textContent = today.name;
+    exC.innerHTML = today.ex.map((e,i) => `<div class="ex-row"><div class="ex-ic" style="background:var(--rust-bg)">🏋️</div><div style="flex:1"><div class="ex-name">${e}</div><div class="ex-sets">4 sett × 8–12 reps</div></div><input class="ex-inp" id="ex-${i}" placeholder="kg" type="number"></div>`).join('');
+  }
+  const cp = carProgs[who];
+  document.getElementById('car-weekplan').innerHTML = cp.map(d => `<div class="log-row"><div><div class="log-type">${d.done?'<span class="lbadge lb-c">✓</span>':'<span class="lbadge" style="background:var(--warm);color:var(--clay)">Planlagt</span>'} ${d.ico} ${d.name}</div><div class="log-date">${d.day} · Mål: ${d.target}</div></div></div>`).join('');
+}
+renderTraining('me');
+
+document.getElementById('ttab-str').addEventListener('click', () => {
+  document.getElementById('ttab-str').classList.add('on'); document.getElementById('ttab-car').classList.remove('on');
+  document.getElementById('panel-str').style.display=''; document.getElementById('panel-car').style.display='none';
+});
+document.getElementById('ttab-car').addEventListener('click', () => {
+  document.getElementById('ttab-car').classList.add('on'); document.getElementById('ttab-str').classList.remove('on');
+  document.getElementById('panel-car').style.display=''; document.getElementById('panel-str').style.display='none';
+});
+
+function addToLog(badge, cls, name, who) {
+  const days=['Søn','Man','Tir','Ons','Tor','Fre','Lør'];
+  const mo=['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+  const d = new Date();
+  const w = who==='me'?'👨 Deg':'👩 Maria';
+  const row = document.createElement('div'); row.className='log-row';
+  row.innerHTML = `<div><div class="log-type"><span class="lbadge ${cls}">${badge}</span> ${name}</div><div class="log-date">${days[d.getDay()]} ${d.getDate()}. ${mo[d.getMonth()]} · ${w}</div></div>`;
+  document.getElementById('train-log').insertBefore(row, document.getElementById('train-log').firstChild);
+}
+
+document.getElementById('save-str-btn').addEventListener('click', () => {
+  const prog = strProgs[curTrainWho].find(d => d.ex.length && !d.done);
+  if (prog) prog.done = true;
+  const name = prog ? prog.name : 'Styrkeøkt';
+  addToLog('Styrke','lb-s', name, curTrainWho);
+  const s = document.getElementById('s-sess'); s.textContent = parseInt(s.textContent)+1;
+  renderTraining();
+  alert('💪 Økt lagret! Bra jobbet!');
+});
+
+document.getElementById('save-car-btn').addEventListener('click', () => {
+  const km = (parseFloat(document.getElementById('run-km').value)||0)+(parseFloat(document.getElementById('bike-km').value)||0);
+  const min = (parseFloat(document.getElementById('run-min').value)||0)+(parseFloat(document.getElementById('bike-min').value)||0)+(parseFloat(document.getElementById('other-min').value)||0);
+  const desc = km>0?`${km} km`:`${min} min`;
+  addToLog('Kondis','lb-c', desc, curTrainWho);
+  if (km>0){const c=document.getElementById('c-km');c.textContent=parseFloat(c.textContent)+km;}
+  if (min>0){const m=document.getElementById('c-min');m.textContent=parseFloat(m.textContent)+min;}
+  const cs=document.getElementById('c-sess');cs.textContent=parseInt(cs.textContent)+1;
+  ['run-km','run-min','bike-km','bike-min','other-min'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  alert('🏃 Kondisjon lagret! Bra jobbet!');
+});
+
+// =================== FAMILY BUTTONS ===================
+const pregItems = [
+  {title:'Bestill tid hos fastlege / jordmor',sub:'Innen uke 8',t:1},{title:'Ta folsyre daglig',sub:'Fra oppstart',t:1},{title:'Terminfastsettelse ultralyd',sub:'Uke 11–14',t:1},{title:'KUB-test blodprøver',sub:'Uke 12',t:1},
+  {title:'Organscan (stor ultralyd)',sub:'Uke 17–19',t:2},{title:'Fortell arbeidsgiver',sub:'Senest uke 12 anbefalt',t:2},{title:'Søk foreldrepermisjon NAV',sub:'3 måneder før termin',t:2},{title:'Velg fødested',sub:'Stavanger universitetssjukehus',t:2},{title:'Kjøp barnevogn og bilsete',sub:'Senest uke 32',t:2},
+  {title:'Innred barnerom',sub:'Uke 28–34',t:3},{title:'Pakk sykehusveske',sub:'Klar fra uke 36',t:3},{title:'Meld barn til barnehage',sub:'Søknadsfrist 1. mars!',t:3},{title:'Registrer barnets navn',sub:'Innen 6 måneder',t:3}
+];
+
+document.getElementById('btn-preg').addEventListener('click', () => {
+  document.getElementById('preg-section').style.display='block';
+  const list = document.getElementById('preg-list'); list.innerHTML = '';
+  let lastT=0;
+  pregItems.forEach(item => {
+    if (item.t!==lastT) { lastT=item.t; const lbl=document.createElement('div'); lbl.style.cssText='padding:9px 16px 3px;font-size:.69rem;color:var(--clay);font-weight:700;text-transform:uppercase;letter-spacing:.07em'; lbl.textContent=['','1. trimester','2. trimester','3. trimester'][item.t]; list.appendChild(lbl); }
+    const row=document.createElement('div'); row.className='preg-item';
+    row.innerHTML=`<div class="pchk2"></div><div style="flex:1"><div class="pi-t">${item.title}</div><div class="pi-s">${item.sub}</div></div><span class="ptri t${item.t}">T${item.t}</span>`;
+    list.appendChild(row);
+  });
+});
+document.getElementById('btn-kid').addEventListener('click', () => {
+  document.getElementById('kids-section').style.display='block';
+});
+
+// =================== AI CHAT + VOICE ===================
+document.getElementById('open-chat-btn').addEventListener('click', () => { document.getElementById('chatPanel').classList.add('open'); document.getElementById('chat-inp').focus(); });
+document.getElementById('close-chat-btn').addEventListener('click', () => document.getElementById('chatPanel').classList.remove('open'));
+
+const SYSTEM = `Du er en varm og praktisk hjemmeassistent for et par på Bryne, Jæren.
+Fakta du kjenner: Maria (f. 28.05.1996, fyller 30 år i 2026, laktoseintolerant — tåler litt, ikke mye), partner (f. 13.02.1997).
+Netflix, HBO Max, Viaplay. Boliglån + studielån.
+Kommende hendelser: terrassebytte april 2026, Marias 30-årsdag 28. mai, hagefest 30. mai (20+ gjester), male huset 2027.
+Husoppgaver: klesvask ukentlig, støvsuge ukentlig, vaske bad, skifte dekk april/oktober, rense sluk månedlig, spyle hus vår.
+Trening: partner trener styrke (bryst/triceps, rygg/biceps, bein/skulder) + kondisjon. Maria trener fullkropp + kondisjon.
+Svar alltid på norsk. Vær konkret, varm og hjelpsom. For middagsforslag: alltid lf-tilpasning for Maria.`;
+
+let chatHistory = [];
+
+async function sendChat(text) {
+  const msg = text || document.getElementById('chat-inp').value.trim();
+  if (!msg) return;
+  document.getElementById('chat-inp').value = '';
+  addMsg(msg, 'user');
+  chatHistory.push({role:'user', content:msg});
+  const typing = document.createElement('div'); typing.className='msg bot';
+  typing.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  document.getElementById('chat-msgs').appendChild(typing); scrollChat();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYSTEM,messages:chatHistory})});
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Beklager, noe gikk galt.';
+    typing.remove(); addMsg(reply,'bot');
+    chatHistory.push({role:'assistant',content:reply});
+    // Text-to-speech for response
+    if (window.speechSynthesis && ttsEnabled) {
+      const utt = new SpeechSynthesisUtterance(reply.substring(0,300));
+      utt.lang='nb-NO'; utt.rate=0.95;
+      window.speechSynthesis.speak(utt);
+    }
+  } catch(e) { typing.remove(); addMsg('Beklager, kunne ikke koble til.','bot'); }
+}
+
+function addMsg(t, type) {
+  const d=document.createElement('div'); d.className=`msg ${type}`; d.textContent=t;
+  document.getElementById('chat-msgs').appendChild(d); scrollChat();
+}
+function scrollChat() { const m=document.getElementById('chat-msgs'); m.scrollTop=m.scrollHeight; }
+
+document.getElementById('chat-send').addEventListener('click', () => sendChat());
+document.getElementById('chat-inp').addEventListener('keydown', e => { if(e.key==='Enter') sendChat(); });
+
+// =================== VOICE (Speech Recognition) ===================
+let recognition = null;
+let ttsEnabled = false;
+const micBtn = document.getElementById('mic-btn');
+const voiceStatus = document.getElementById('voice-status');
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = 'nb-NO';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    micBtn.classList.add('listening');
+    voiceStatus.textContent = '🎙️ Lytter...';
+  };
+  recognition.onresult = e => {
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('chat-inp').value = transcript;
+    voiceStatus.textContent = '';
+    micBtn.classList.remove('listening');
+    ttsEnabled = true;
+    sendChat(transcript);
+  };
+  recognition.onerror = () => {
+    micBtn.classList.remove('listening');
+    voiceStatus.textContent = '';
+  };
+  recognition.onend = () => {
+    micBtn.classList.remove('listening');
+    if (!voiceStatus.textContent.includes('Lytter')) voiceStatus.textContent = '';
+  };
+
+  micBtn.addEventListener('click', () => {
+    if (micBtn.classList.contains('listening')) {
+      recognition.stop();
+    } else {
+      ttsEnabled = true;
+      recognition.start();
+    }
+  });
+} else {
+  micBtn.style.opacity = '0.4';
+  micBtn.title = 'Tale ikke støttet i denne nettleseren';
+}
+</script>
+</body>
+</html>
