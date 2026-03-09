@@ -686,19 +686,87 @@ document.getElementById('btn-kid').addEventListener('click', () => {
   document.getElementById('kids-section').style.display='block';
 });
 
+// =================== DATABASE (Supabase via API) ===================
+async function dbGet(table) {
+  try {
+    const r = await fetch('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'get', table})});
+    return await r.json();
+  } catch(e) { return []; }
+}
+async function dbInsert(table, data) {
+  try {
+    const r = await fetch('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'insert', table, data})});
+    return await r.json();
+  } catch(e) { return null; }
+}
+async function dbUpdate(table, id, data) {
+  try {
+    const r = await fetch('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'update', table, id, data})});
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+// =================== DYNAMIC MEALS ===================
+const DAYS = ['Man','Tir','Ons','Tor','Fre','Lor','Son'];
+async function loadMeals() {
+  const meals = await dbGet('meals');
+  if (!meals || !meals.length) return;
+  const container = document.querySelector('#page-dinner .section');
+  const existing = container ? container.querySelectorAll('.wday') : [];
+  meals.forEach(m => {
+    const idx = DAYS.indexOf(m.day);
+    if (idx >= 0 && existing[idx]) {
+      const nameEl = existing[idx].querySelector('.wd-m');
+      const noteEl = existing[idx].querySelector('.wd-n, .wd-f');
+      if (nameEl) nameEl.textContent = m.meal_name;
+      if (noteEl) { noteEl.textContent = m.lf_note || ''; noteEl.className = 'wd-n'; }
+      existing[idx].dataset.meal = m.meal_name;
+      existing[idx].dataset.dbId = m.id;
+    }
+  });
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const tonight = meals.find(m => m.day === DAYS[todayIdx]);
+  if (tonight) { const dh = document.querySelector('#page-home .dh-n'); if (dh) dh.textContent = tonight.meal_name; }
+}
+
+// =================== DYNAMIC TRAINING LOG ===================
+async function loadTrainingLog() {
+  const logs = await dbGet('training_log');
+  if (!logs || !logs.length) return;
+  const logEl = document.getElementById('train-log');
+  if (!logEl) return;
+  const days=['Son','Man','Tir','Ons','Tor','Fre','Lor'];
+  const mo=['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'];
+  const recent = [...logs].reverse().slice(0,8);
+  logEl.innerHTML = recent.map(l => {
+    const d = new Date(l.created_at);
+    const who = l.who==='me'?'Deg':'Maria';
+    const badge = l.type==='strength'?'lb-s':'lb-c';
+    const label = l.type==='strength'?'Styrke':'Kondis';
+    const desc = l.km ? l.name+' '+l.km+'km' : l.name;
+    return '<div class="log-row"><div><div class="log-type"><span class="lbadge '+badge+'">'+label+'</span> '+desc+'</div><div class="log-date">'+days[d.getDay()]+' '+d.getDate()+'. '+mo[d.getMonth()]+' '+who+'</div></div></div>';
+  }).join('');
+}
+
+async function initApp() {
+  await loadMeals();
+  await loadTrainingLog();
+}
+initApp();
+
 // =================== AI CHAT + VOICE ===================
 document.getElementById('open-chat-btn').addEventListener('click', () => { document.getElementById('chatPanel').classList.add('open'); document.getElementById('chat-inp').focus(); });
 document.getElementById('close-chat-btn').addEventListener('click', () => document.getElementById('chatPanel').classList.remove('open'));
 
-const SYSTEM = `Du er en varm og praktisk hjemmeassistent for et par på Bryne, Jæren.
-Fakta du kjenner: Maria (f. 28.05.1996, fyller 30 år i 2026, laktoseintolerant — tåler litt, ikke mye), partner (f. 13.02.1997).
-Netflix, HBO Max, Viaplay. Boliglån + studielån.
-Kommende hendelser: terrassebytte april 2026, Marias 30-årsdag 28. mai, hagefest 30. mai (20+ gjester), male huset 2027.
-Husoppgaver: klesvask ukentlig, støvsuge ukentlig, vaske bad, skifte dekk april/oktober, rense sluk månedlig, spyle hus vår.
-Trening: partner trener styrke (bryst/triceps, rygg/biceps, bein/skulder) + kondisjon. Maria trener fullkropp + kondisjon.
-Svar alltid på norsk. Vær konkret, varm og hjelpsom. For middagsforslag: alltid lf-tilpasning for Maria.`;
+async function buildSystemPrompt() {
+  const [meals, logs] = await Promise.all([dbGet('meals'), dbGet('training_log')]);
+  const mealPlan = meals.map(m=>m.day+': '+m.meal_name).join(', ') || 'ikke planlagt';
+  const recentTraining = [...logs].reverse().slice(0,3).map(l=>(l.who==='me'?'Han':'Maria')+': '+l.name).join(', ') || 'ingen';
+  return 'Du er en varm og praktisk hjemmeassistent for et par pa Bryne, Jaeren.\nMaria (f. 28.05.1996, fyller 30 ar 28. mai 2026, laktoseintolerant). Partner (f. 13.02.1997).\nStreaming: Netflix 179kr, HBO Max 129kr, Viaplay 299kr. Boliglan + studielan.\nHendelser: terrassebytte april 2026, Marias 30-arsdag 28. mai, hagefest 30. mai (20+ gjester), male huset 2027.\nTrening: han = styrke (bryst/triceps man, rygg/biceps ons, bein/skulder fre) + kondisjon. Maria = fullkropp + kondisjon.\nLIVE: Ukens middag: '+mealPlan+' | Siste trening: '+recentTraining+'\nKommandoer - svar med JSON pa forste linje ved dataendringer:\n- endre middag [dag] til [rett] -> {"action":"update_meal","day":"Man","meal":"Taco","lf_note":"bruk lf romme"}\n- logg trening [type] [navn] -> {"action":"log_training","who":"me","type":"strength","name":"Bein og skulder"}\n- Maria lop [X] km -> {"action":"log_training","who":"maria","type":"cardio","name":"Loping","km":X}\nSvar alltid pa norsk. Vaer konkret og varm. Alltid lf-tilpasning for Maria ved matforslag.';
+}
 
 let chatHistory = [];
+
 
 async function sendChat(text) {
   const msg = text || document.getElementById('chat-inp').value.trim();
@@ -710,19 +778,51 @@ async function sendChat(text) {
   typing.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
   document.getElementById('chat-msgs').appendChild(typing); scrollChat();
   try {
-    const res = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:SYSTEM,messages:chatHistory})});
+    const system = await buildSystemPrompt();
+    const res = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system,messages:chatHistory})});
     const data = await res.json();
     const reply = data.content?.[0]?.text || 'Beklager, noe gikk galt.';
-    typing.remove(); addMsg(reply,'bot');
+    typing.remove();
+
+    // Check if reply contains a JSON action on first line
+    const firstLine = reply.trim().split('\n')[0].trim();
+    if (firstLine.startsWith('{') && firstLine.includes('"action"')) {
+      try {
+        const cmd = JSON.parse(firstLine);
+        const rest = reply.trim().split('\n').slice(1).join('\n').trim();
+        addMsg(rest || reply, 'bot');
+        await handleAIAction(cmd);
+      } catch(e) { addMsg(reply, 'bot'); }
+    } else {
+      addMsg(reply, 'bot');
+    }
+
     chatHistory.push({role:'assistant',content:reply});
-    // Text-to-speech for response
     if (window.speechSynthesis && ttsEnabled) {
-      const utt = new SpeechSynthesisUtterance(reply.substring(0,300));
+      const utt = new SpeechSynthesisUtterance(reply.replace(/\{.*?\}/g,'').substring(0,300));
       utt.lang='nb-NO'; utt.rate=0.95;
       window.speechSynthesis.speak(utt);
     }
   } catch(e) { typing.remove(); addMsg('Beklager, kunne ikke koble til.','bot'); }
 }
+
+async function handleAIAction(cmd) {
+  if (cmd.action === 'update_meal') {
+    const meals = await dbGet('meals');
+    const existing = meals.find(m => m.day === cmd.day);
+    if (existing) {
+      await dbUpdate('meals', existing.id, {meal_name: cmd.meal, lf_note: cmd.lf_note || ''});
+    } else {
+      await dbInsert('meals', {day: cmd.day, meal_name: cmd.meal, lf_note: cmd.lf_note || ''});
+    }
+    await loadMeals();
+  }
+  if (cmd.action === 'log_training') {
+    await dbInsert('training_log', {who: cmd.who, type: cmd.type, name: cmd.name, km: cmd.km || null, minutes: cmd.minutes || null});
+    await loadTrainingLog();
+  }
+}
+
 
 function addMsg(t, type) {
   const d=document.createElement('div'); d.className=`msg ${type}`; d.textContent=t;
