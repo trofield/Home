@@ -710,7 +710,7 @@ async function sendChat(text) {
   typing.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
   document.getElementById('chat-msgs').appendChild(typing); scrollChat();
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYSTEM,messages:chatHistory})});
+    const res = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYSTEM,messages:chatHistory})});
     const data = await res.json();
     const reply = data.content?.[0]?.text || 'Beklager, noe gikk galt.';
     typing.remove(); addMsg(reply,'bot');
